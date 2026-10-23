@@ -363,7 +363,7 @@ pub fn generate_gbnf_file(
         let mut file_rule = String::new();
 
         file_rule.push_str("prefix \"");
-        file_rule.push_str(filename);
+        file_rule.push_str(&filename.chars().map(quote_char).collect::<String>());
         file_rule.push_str("\" \"\\n\"\n");
 
         for range in ranges {
