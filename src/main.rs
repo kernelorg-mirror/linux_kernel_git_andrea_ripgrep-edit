@@ -632,13 +632,33 @@ fn apply_changes_to_file_ranges(
         assert!(validate_changes_vs_ranges(changes, file_ranges, filename).is_ok());
     }
 
-    let mut changed_files = false;
+    // Compute and verify all modifications first, then write them
+    // back only if every file still matches the original ripgrep
+    // output, so a concurrent modification never results in a
+    // partial or misplaced write
+    let mut pending_writes: Vec<(&String, String)> = Vec::new();
 
     for (file_path, file_changes) in changes {
         if let Some(ranges) = file_ranges.hash.get(file_path) {
             // Read the original file
             let content = std::fs::read_to_string(file_path)?;
             let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+
+            // Verify the file was not modified while the editor was open
+            for range in ranges {
+                let start = range.start.checked_sub(1).ok_or_else(|| {
+                    anyhow::anyhow!("Invalid range start 0 in file: {}", file_path)
+                })?;
+                let end = range.end;
+                if start >= end || end > lines.len() || lines[start..end] != range.lines[..] {
+                    return Err(anyhow::anyhow!(
+                        "File {} was modified while editing: lines {}-{} no longer match the original content",
+                        file_path,
+                        range.start,
+                        range.end
+                    ));
+                }
+            }
 
             // Check if any changes are actually different from original
             let mut has_changes = false;
@@ -649,25 +669,27 @@ fn apply_changes_to_file_ranges(
                 let end = range.end; // End is exclusive in our range
 
                 // Replace the lines in the file
-                if let Some(snippet) = file_changes.get(i) {
-                    let original_snippet: Vec<String> = lines[start..end].to_vec();
-                    if *snippet != original_snippet {
-                        // Replace the range with new content
-                        lines.splice(start..end, snippet.clone());
-                        has_changes = true;
-                        changed_files = true;
-                    }
+                if let Some(snippet) = file_changes.get(i)
+                    && *snippet != range.lines
+                {
+                    // Replace the range with new content
+                    lines.splice(start..end, snippet.clone());
+                    has_changes = true;
                 }
             }
 
             if has_changes {
-                // Write back the modified content
-                std::fs::write(file_path, lines.join("\n") + "\n")?;
+                pending_writes.push((file_path, lines.join("\n") + "\n"));
             }
         }
     }
 
-    if !changed_files {
+    for (file_path, content) in &pending_writes {
+        // Write back the modified content
+        std::fs::write(file_path, content)?;
+    }
+
+    if pending_writes.is_empty() {
         eprintln!("No changes detected in any file.");
     }
 
