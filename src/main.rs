@@ -605,6 +605,14 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// Strip the trailing "\n" or "\r\n" line terminator, matching the
+// behavior of str::lines() used to parse the ripgrep output
+#[inline]
+fn strip_line_terminator(line: &str) -> &str {
+    let line = line.strip_suffix('\n').unwrap_or(line);
+    line.strip_suffix('\r').unwrap_or(line)
+}
+
 fn apply_changes_to_file_ranges(
     changes: &FileChanges,
     file_ranges: &FileRanges,
@@ -642,7 +650,14 @@ fn apply_changes_to_file_ranges(
         if let Some(ranges) = file_ranges.hash.get(file_path) {
             // Read the original file
             let content = std::fs::read_to_string(file_path)?;
-            let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+            // Split keeping the line terminators so that
+            // lines.concat() reconstructs the original content
+            // exactly, including any '\r' before the '\n' and a
+            // missing trailing newline
+            let mut lines: Vec<String> = content
+                .split_inclusive('\n')
+                .map(|s| s.to_string())
+                .collect();
 
             // Verify the file was not modified while the editor was open
             for range in ranges {
@@ -650,7 +665,13 @@ fn apply_changes_to_file_ranges(
                     anyhow::anyhow!("Invalid range start 0 in file: {}", file_path)
                 })?;
                 let end = range.end;
-                if start >= end || end > lines.len() || lines[start..end] != range.lines[..] {
+                if start >= end
+                    || end > lines.len()
+                    || !lines[start..end]
+                        .iter()
+                        .zip(range.lines.iter())
+                        .all(|(line, orig)| strip_line_terminator(line) == orig)
+                {
                     return Err(anyhow::anyhow!(
                         "File {} was modified while editing: lines {}-{} no longer match the original content",
                         file_path,
@@ -672,14 +693,17 @@ fn apply_changes_to_file_ranges(
                 if let Some(snippet) = file_changes.get(i)
                     && *snippet != range.lines
                 {
+                    // Always terminate the modified lines with a newline
+                    let new_lines: Vec<String> =
+                        snippet.iter().map(|line| format!("{}\n", line)).collect();
                     // Replace the range with new content
-                    lines.splice(start..end, snippet.clone());
+                    lines.splice(start..end, new_lines);
                     has_changes = true;
                 }
             }
 
             if has_changes {
-                pending_writes.push((file_path, lines.join("\n") + "\n"));
+                pending_writes.push((file_path, lines.concat()));
             }
         }
     }
