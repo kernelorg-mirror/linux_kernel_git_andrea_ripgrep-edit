@@ -735,14 +735,13 @@ fn parse_modified_file(
     let mut current_snippet: Vec<Vec<String>> = Vec::new();
     let mut prev_line_empty = false;
     let mut pprev_line_separator = false;
-    let mut first = true;
+    let mut header = true;
 
     for line in reader.lines() {
         let line = line?;
         processed_lines.push(line.clone());
 
-        if first && line == "```" {
-            first = false;
+        if header && line == "```" {
             continue;
         }
 
@@ -770,6 +769,7 @@ fn parse_modified_file(
         if let Some(normalized_line) = normalized_line
             && file_ranges.contains_key(&normalized_line)
         {
+            header = false;
             if !current_file.is_empty() {
                 if !pprev_line_separator {
                     return Err(anyhow::anyhow!(
