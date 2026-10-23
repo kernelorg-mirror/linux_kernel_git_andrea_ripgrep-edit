@@ -367,6 +367,14 @@ fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
     let mut stdout = child.stdout.take().unwrap();
     let mut stderr = child.stderr.take().unwrap();
 
+    // Drain stderr in a separate thread to avoid a deadlock if rg
+    // fills the stderr pipe buffer before closing stdout
+    let stderr_thread = std::thread::spawn(move || {
+        let mut stderr_bytes = Vec::new();
+        let _ = std::io::Read::read_to_end(&mut stderr, &mut stderr_bytes);
+        stderr_bytes
+    });
+
     let mut buf = [0u8; 65536];
     let mut total_bytes = 0u64;
     let mut rg_output_bytes: Vec<u8> = Vec::new();
@@ -393,15 +401,16 @@ fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
                 if e.kind() == std::io::ErrorKind::Interrupted {
                     continue;
                 }
+                let _ = child.kill();
+                let _ = child.wait();
                 anyhow::bail!("Error reading rg output: {}", e);
             }
         };
     }
 
     let status = child.wait()?;
+    let stderr_bytes = stderr_thread.join().unwrap_or_default();
     if !status.success() && status.code() != Some(1) {
-        let mut stderr_bytes = Vec::new();
-        let _ = std::io::Read::read_to_end(&mut stderr, &mut stderr_bytes);
         let stderr_str = String::from_utf8_lossy(&stderr_bytes);
         match status.code() {
             Some(_) => anyhow::bail!("rg exited with {}: {}", status, stderr_str),
