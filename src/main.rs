@@ -821,7 +821,12 @@ fn parse_modified_file(
             eprintln!("Warning: Trailing lines after last file: {}", current_file);
         } else {
             assert!(!prev_line_empty);
-            assert!(pprev_line_separator);
+            if !pprev_line_separator {
+                return Err(anyhow::anyhow!(
+                    "Missing separator at the end of file: {}",
+                    current_file
+                ));
+            }
         }
         if changes
             .insert(current_file.clone(), current_snippet.clone())
