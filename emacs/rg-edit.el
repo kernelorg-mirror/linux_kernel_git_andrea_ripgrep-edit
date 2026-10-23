@@ -169,7 +169,9 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 	default-directory)))
 
 (defun rg-edit--invoke (regexp path extra-args get-path-fn refine-path)
-  "Invoke rg-edit with REGEXP, PATH, EXTRA-ARGS using GET-PATH-FN to determine the path."
+  "Invoke rg-edit with REGEXP, PATH, EXTRA-ARGS using GET-PATH-FN to determine the path.
+If REFINE-PATH is non-nil, or the current buffer is not visiting a file,
+prompt the user to confirm or refine the search path."
   (rg-edit--check-server)
   (rg-edit--warn-if-auto-revert-disabled)
   (let ((search-regexp (or regexp
