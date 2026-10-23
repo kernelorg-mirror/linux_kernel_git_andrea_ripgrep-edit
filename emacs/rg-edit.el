@@ -211,7 +211,7 @@ With a C-u prefix argument invoke rg-edit-git-conflicts instead."
 
 (defun rg-edit--gptel-rewrite ()
   (when (and (boundp 'gptel-version)
-             (string-match-p "\\.rg.edit\\'" (buffer-name)))
+             (string-match-p "\\.rg-edit\\'" (buffer-name)))
     rg-edit-gptel-system-message))
 (add-hook 'gptel-rewrite-directives-hook #'rg-edit--gptel-rewrite)
 
