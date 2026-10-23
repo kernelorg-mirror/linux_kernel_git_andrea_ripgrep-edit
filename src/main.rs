@@ -98,17 +98,13 @@ impl FileRanges {
                     anyhow::bail!("File does not exist: {}", line);
                 }
 
-                if let Some(ref current) = current_file {
-                    if current != &line {
-                        if let Some(range) = current_range {
-                            file_ranges.add(current, range);
-                        }
-                        current_file = Some(line.to_string());
-                    }
-                } else {
-                    current_file = Some(line.to_string());
+                if let (Some(current), Some(range)) = (&current_file, current_range.take()) {
+                    file_ranges.add(current, range);
                 }
-                current_range = None;
+                if file_ranges.contains_key(&line) {
+                    anyhow::bail!("Duplicate file found in rg output: {}", line);
+                }
+                current_file = Some(line.to_string());
                 context_is_before = true;
                 prev_line_empty = false;
                 continue;
@@ -120,10 +116,9 @@ impl FileRanges {
 
             if line == context_separator {
                 let current = current_file.as_ref().unwrap();
-                if let Some(range) = current_range {
+                if let Some(range) = current_range.take() {
                     file_ranges.add(current, range);
                 }
-                current_range = None;
                 context_is_before = true;
                 prev_line_empty = false;
                 continue;
@@ -177,7 +172,7 @@ impl FileRanges {
                     current
                 );
             }
-            if let Some(range) = current_range {
+            if let Some(range) = current_range.take() {
                 file_ranges.add(current, range);
             }
         }
