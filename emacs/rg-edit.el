@@ -21,6 +21,11 @@
 
 ;;; Code:
 
+(defgroup rg-edit nil
+  "Edit ripgrep search results across multiple files."
+  :group 'tools
+  :prefix "rg-edit-")
+
 (defcustom rg-edit-executable "rg-edit"
   "The rg-edit executable to use."
   :type 'string
