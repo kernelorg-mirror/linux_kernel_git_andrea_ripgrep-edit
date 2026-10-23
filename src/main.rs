@@ -348,8 +348,9 @@ fn parse_size_limit(size_str: &str) -> Result<u64> {
 
     num_str
         .parse::<u64>()
-        .map(|n| n * multiplier)
-        .map_err(|_| anyhow::anyhow!("Invalid size limit format: {}", size_str))
+        .map_err(|_| anyhow::anyhow!("Invalid size limit format: {}", size_str))?
+        .checked_mul(multiplier)
+        .ok_or_else(|| anyhow::anyhow!("Size limit too large: {}", size_str))
 }
 
 fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
