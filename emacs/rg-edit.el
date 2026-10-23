@@ -251,10 +251,10 @@ With a C-u prefix argument invoke rg-edit-git-conflicts instead."
     (cond
      ((gptel--model-capable-p 'gbnf)
       (setq-local gptel--request-params
-                  (plist-put gptel--request-params :grammar content)))
+                  (plist-put (copy-sequence gptel--request-params) :grammar content)))
      ((gptel--model-capable-p 'ebnf)
       (setq-local gptel--request-params
-                  (plist-put gptel--request-params :structured_outputs
+                  (plist-put (copy-sequence gptel--request-params) :structured_outputs
                              (list :grammar content)))))))
 
 (defun rg-edit--commit ()
