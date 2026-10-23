@@ -122,7 +122,7 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 	   "-E" "emacsclient"
 	   "--dump-on-error"
 	   "--output-size-limit=100m"
-	   (shell-quote-argument dir-name)
+	   dir-name
 	   (split-string-shell-command (string-trim extra-args)))))
 
 (defun rg-edit--get-path (path buffer-file)
