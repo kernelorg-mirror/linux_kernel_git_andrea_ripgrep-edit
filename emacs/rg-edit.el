@@ -112,7 +112,15 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 (defun rg-edit--run-command (regexp path extra-args)
   "Run rg-edit with REGEXP, PATH, and EXTRA-ARGS."
   (let* ((path-dir (directory-file-name path))
-	 (dir-name (file-name-nondirectory path-dir))
+	 (base-name (file-name-nondirectory path-dir))
+	 ;; When the search path is the filesystem root, the base
+	 ;; name is empty: search "." from within the root instead of
+	 ;; passing an empty path argument to rg
+	 (root-p (string-empty-p base-name))
+	 (dir-name (if root-p "." base-name))
+	 (work-dir (if root-p
+		       (file-name-as-directory path-dir)
+		     (file-name-directory path-dir)))
 	 (rg-buffer (get-buffer-create "*rg-edit*" t))
 	 (gbnf (when (rg-edit--gptel-gbnf-enabled-p)
 		 "--gbnf"))
@@ -127,7 +135,7 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 	       (or (string= root file)
 		   (string-prefix-p (file-name-as-directory root) file))))))
     (rg-edit--setup-buffer rg-buffer)
-    (cd (file-name-directory path-dir))
+    (cd work-dir)
     (apply #'start-process "rg-edit"
 	   rg-buffer
 	   rg-edit-executable
