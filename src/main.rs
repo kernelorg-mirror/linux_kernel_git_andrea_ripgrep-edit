@@ -568,7 +568,9 @@ fn main() -> Result<()> {
     let mut editor_cmd = Command::new("sh");
     editor_cmd
         .arg("-c")
-        .arg(format!("{} {}", args.editor, temp_path.display()));
+        .arg(format!("{} \"$@\"", args.editor))
+        .arg("sh") // $0
+        .arg(&temp_path); // $1, passed verbatim
 
     let editor_status = editor_cmd.status()?;
     if !editor_status.success() {
