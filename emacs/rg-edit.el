@@ -228,8 +228,9 @@ ARG is the numeric prefix argument:
 		    :warning)))
 
 (defun rg-edit--gptel-rewrite ()
-  (when (and (boundp 'gptel-version)
-             (string-match-p "\\.rg-edit\\'" (buffer-name)))
+  (when-let* (((boundp 'gptel-version))
+              (file (buffer-file-name))
+              ((string-match-p "\\.rg-edit\\'" file)))
     rg-edit-gptel-system-message))
 (add-hook 'gptel-rewrite-directives-hook #'rg-edit--gptel-rewrite)
 
