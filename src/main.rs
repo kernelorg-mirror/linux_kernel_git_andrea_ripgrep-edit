@@ -403,8 +403,10 @@ fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
         let mut stderr_bytes = Vec::new();
         let _ = std::io::Read::read_to_end(&mut stderr, &mut stderr_bytes);
         let stderr_str = String::from_utf8_lossy(&stderr_bytes);
-        assert!(status.code().unwrap() == 2);
-        anyhow::bail!("rg exited with {}: {}", status, stderr_str);
+        match status.code() {
+            Some(_) => anyhow::bail!("rg exited with {}: {}", status, stderr_str),
+            None => anyhow::bail!("rg was terminated by a signal ({}): {}", status, stderr_str),
+        }
     }
 
     let rg_output = String::from_utf8_lossy(&rg_output_bytes).into_owned();
