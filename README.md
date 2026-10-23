@@ -118,14 +118,15 @@ Every file kept in the edited output must retain all of its snippets and separat
   - `rg-edit` **C-0 C-c r**
   - `rg-edit-buffer` **C-- C-c r**
   - `rg-edit-git-conflicts` **C-u C-c r**
-  - `rg-edit--commit` **C-c C-c** (in the rg-edit buffer)
-  - `rg-edit--abort` **C-c C-k** (in the rg-edit buffer)
+  - `rg-edit--commit` **C-c C-c** (in the rg-edit buffer, via `rg-edit-mode-map`)
+  - `rg-edit--abort` **C-c C-k** (in the rg-edit buffer, via `rg-edit-mode-map`)
   - `rg-edit--terminate` **C-c C-k** (in the `*rg-edit*` buffer, terminates any outstanding session)
 - Customization variables:
   - `rg-edit-executable`: path to the `rg-edit` executable
   - `rg-edit-auto-mark-whole-buffer`: mark the whole buffer when entering `rg-edit-mode`
   - `rg-edit-prefill-extra-args`: default extra arguments (default: `-U --multiline-dotall --smart-case`)
   - `rg-edit-gptel-system-message`: gptel directive used in rg-edit buffers
+  - `rg-edit-mode-hook`: hook run when entering the `rg-edit-mode` major mode (derived from `prog-mode`)
 
 ```elisp
 (add-to-list 'load-path "~/.../ripgrep-edit/emacs/")

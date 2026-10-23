@@ -287,23 +287,29 @@ ARG is the numeric prefix argument:
   (erase-buffer)
   (rg-edit--commit))
 
-(defun rg-edit-mode ()
+(defvar rg-edit-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'rg-edit--commit)
+    (define-key map (kbd "C-c C-k") #'rg-edit--abort)
+    map)
+  "Keymap for `rg-edit-mode'.")
+
+;;;###autoload
+(define-derived-mode rg-edit-mode prog-mode "rg-edit"
+  "Major mode for editing rg-edit temporary files.
+
+\\{rg-edit-mode-map}"
+  :group 'rg-edit
   (let ((rg-buffer (get-buffer "*rg-edit*")))
     (when rg-buffer
       (with-current-buffer rg-buffer
         (bury-buffer))))
-  (prog-mode)
   (rg-edit--setup-gptel-directives)
   (rg-edit--setup-gptel--rewrite-directive)
   (add-hook 'kill-buffer-hook #'rg-edit--kill-buffer-hook nil t)
   (rg-edit--gbnf)
   (when rg-edit-auto-mark-whole-buffer
     (mark-whole-buffer))
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map (current-local-map))
-    (define-key map (kbd "C-c C-c") #'rg-edit--commit)
-    (define-key map (kbd "C-c C-k") #'rg-edit--abort)
-    (use-local-map map))
   (setq-local server-client-instructions nil)
   (message "When done C-c C-c to commit, C-c C-k to abort or C-x # to manually close the session"))
 
