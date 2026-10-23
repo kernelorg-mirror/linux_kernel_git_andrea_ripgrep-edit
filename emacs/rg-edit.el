@@ -55,6 +55,7 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 
 (define-key global-map (kbd "C-c r") #'rg-edit-git)
 
+(require 'server)
 (defun rg-edit--check-server ()
   "Check if the Emacs server is running and signal an error if not."
   (unless (server-running-p)
