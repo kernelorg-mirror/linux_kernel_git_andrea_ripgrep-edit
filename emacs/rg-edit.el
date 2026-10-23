@@ -115,8 +115,12 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 			     (when (and gbnf extra-args) " ")
 			     extra-args)))
     (save-some-buffers
-     nil (lambda () (string-prefix-p (file-truename path-dir)
-				     (file-truename (buffer-file-name)))))
+     nil (lambda ()
+	   (when-let* ((file (buffer-file-name)))
+	     (let ((root (file-truename path-dir))
+		   (file (file-truename file)))
+	       (or (string= root file)
+		   (string-prefix-p (file-name-as-directory root) file))))))
     (rg-edit--setup-buffer rg-buffer)
     (cd (file-name-directory path-dir))
     (apply #'start-process "rg-edit"
