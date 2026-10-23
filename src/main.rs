@@ -453,6 +453,7 @@ fn main() -> Result<()> {
         ))
         .arg(format!("--field-match-separator={}", RG_MATCH_SEPARATOR))
         .arg(format!("--context-separator={context_separator}"))
+        .arg("--encoding=none")
         .arg("-e")
         .arg(&args.regexp);
 
