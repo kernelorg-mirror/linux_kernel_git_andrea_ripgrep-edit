@@ -277,8 +277,11 @@ With a C-u prefix argument invoke rg-edit-git-conflicts instead."
   (rg-edit--gbnf)
   (when rg-edit-auto-mark-whole-buffer
     (mark-whole-buffer))
-  (define-key (current-local-map) (kbd "C-c C-c") #'rg-edit--commit)
-  (define-key (current-local-map) (kbd "C-c C-k") #'rg-edit--abort)
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map (current-local-map))
+    (define-key map (kbd "C-c C-c") #'rg-edit--commit)
+    (define-key map (kbd "C-c C-k") #'rg-edit--abort)
+    (use-local-map map))
   (setq-local server-client-instructions nil)
   (message "When done C-c C-c to commit, C-c C-k to abort or C-x # to manually close the session"))
 
