@@ -16,6 +16,11 @@ fn __quote_char(c: char, in_range: bool) -> String {
         '\n' => "\\n".to_string(),
         '"' | '\\' => format!("\\{}", c),
         '[' | ']' if in_range => format!("\\{}", c),
+        // a raw '-' inside a character class could be parsed as a
+        // range operator; "\x2D" is understood by both llama.cpp
+        // GBNF and vLLM (xgrammar) EBNF, while "\-" is rejected by
+        // llama.cpp
+        '-' if in_range => "\\x2D".to_string(),
         _ => c.to_string(),
     }
 }
