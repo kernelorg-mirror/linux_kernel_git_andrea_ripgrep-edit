@@ -75,19 +75,44 @@ fn negative(control_line: Option<&String>, separator: &str) -> String {
                 } else {
                     &format!("\"{}\"", positive_sep)
                 };
-                if i > 0 {
-                    rule.push_str(&format!(
-                        "{} [^\\n{}] |\n {} [^\\n{}]",
-                        positive, c, positive_sep, s
-                    ));
-                    if !c.is_empty() {
-                        rule_terminated.push_str(&format!(" | {}\n", positive));
+                // Optimization: deduplicate the excluded character when the
+                // control line and the separator share it
+                let excluded = |c: &str, s: &str| -> String {
+                    if c == s {
+                        c.to_string()
+                    } else {
+                        format!("{}{}", c, s)
                     }
-                    if !s.is_empty() {
-                        rule_terminated.push_str(&format!(" | {}\n", positive_sep));
+                };
+                if i > 0 {
+                    if positive == positive_sep {
+                        // Shared prefix: a single branch must exclude
+                        // both the control line and the separator
+                        // next characters, otherwise each branch
+                        // would accept the line the other one is
+                        // meant to exclude.
+                        //
+                        // The shared prefix is a terminated line only
+                        // if it's neither the full control line nor
+                        // the full separator.
+                        if !c.is_empty() && !s.is_empty() {
+                            rule_terminated.push_str(&format!(" | {}\n", positive));
+                        }
+                        rule.push_str(&format!("{} [^\\n{}]", positive, excluded(c, s)));
+                    } else {
+                        rule.push_str(&format!(
+                            "{} [^\\n{}] |\n {} [^\\n{}]",
+                            positive, c, positive_sep, s
+                        ));
+                        if !c.is_empty() {
+                            rule_terminated.push_str(&format!(" | {}\n", positive));
+                        }
+                        if !s.is_empty() {
+                            rule_terminated.push_str(&format!(" | {}\n", positive_sep));
+                        }
                     }
                 } else {
-                    rule.push_str(&format!(" [^\\n{}{}]", c, s));
+                    rule.push_str(&format!(" [^\\n{}]", excluded(c, s)));
                 }
             } else {
                 positive.push_str(&quote_char(*c));
