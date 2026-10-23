@@ -194,13 +194,19 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 (defun rg-edit-git (&optional arg)
   "Invoke rg-edit-git with the search path set in the git root.
 
-With a C-u prefix argument invoke rg-edit-git-conflicts instead."
+ARG is the numeric prefix argument:
+- no prefix (1): invoke rg-edit with the search path set in the git root.
+- C-0 (0): invoke `rg-edit' instead.
+- C-- (-1): invoke `rg-edit-buffer' instead.
+- C-u (4): invoke `rg-edit-git-conflicts' instead."
   (interactive "p")
-  (cond
-   ((= arg 1) (rg-edit--invoke nil nil nil #'rg-edit--get-git-path nil))
-   ((= arg 0) (rg-edit))
-   ((= arg -1) (rg-edit-buffer))
-   ((= arg 4) (rg-edit-git-conflicts))))
+  (let ((arg (prefix-numeric-value arg)))
+    (cond
+     ((= arg 1) (rg-edit--invoke nil nil nil #'rg-edit--get-git-path nil))
+     ((= arg 0) (rg-edit))
+     ((= arg -1) (rg-edit-buffer))
+     ((= arg 4) (rg-edit-git-conflicts))
+     (t (user-error "Unsupported prefix argument: %s" arg)))))
 
 (defun rg-edit--warn-if-auto-revert-disabled ()
   "Warn if automatic file revert is not enabled."
