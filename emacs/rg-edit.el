@@ -246,6 +246,8 @@ ARG is the numeric prefix argument:
   (when (fboundp 'gptel-abort)
     (gptel-abort (current-buffer))))
 
+(defvar-local rg-edit--gbnf-content nil)
+
 (defun rg-edit--gbnf ()
   "Read the .gbnf file and inject its contents into the JSON as the 'grammar' field."
   (when-let* (((rg-edit--gptel-gbnf-enabled-p))
