@@ -369,7 +369,7 @@ fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
 
     let mut buf = [0u8; 65536];
     let mut total_bytes = 0u64;
-    let mut rg_output = String::new();
+    let mut rg_output_bytes: Vec<u8> = Vec::new();
 
     loop {
         match std::io::Read::read(&mut stdout, &mut buf) {
@@ -387,7 +387,7 @@ fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
                         std::process::exit(3);
                     }
                 }
-                rg_output.push_str(&String::from_utf8_lossy(&buf[..n]));
+                rg_output_bytes.extend_from_slice(&buf[..n]);
             }
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::Interrupted {
@@ -406,6 +406,8 @@ fn run_rg(rg_cmd: &mut Command, size_limit: Option<u64>) -> Result<String> {
         assert!(status.code().unwrap() == 2);
         anyhow::bail!("rg exited with {}: {}", status, stderr_str);
     }
+
+    let rg_output = String::from_utf8_lossy(&rg_output_bytes).into_owned();
 
     Ok(rg_output)
 }
