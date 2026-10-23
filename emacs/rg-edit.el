@@ -90,15 +90,18 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
   (with-current-buffer rg-buffer
     (visual-line-mode)))
 
+(require 'cl-lib)
 (defun rg-edit--gptel-gbnf-enabled-p ()
-  "Return non-nil if at least one configured gptel backend supports GBNF."
-  (when (fboundp 'gptel--model-capable-p)
+  "Return t if at least one model of a configured gptel backend supports GBNF or EBNF."
+  (when (and (fboundp 'gptel--model-capable-p)
+             (boundp 'gptel--known-backends))
     (cl-loop for backend-entry in gptel--known-backends
              for backend-value = (cdr backend-entry)
-             if (gptel-backend-p backend-value)
-             if (or (gptel--model-capable-p 'gbnf (intern (car backend-entry)))
-                    (gptel--model-capable-p 'ebnf (intern (car backend-entry))))
-             return t)))
+             thereis (and (gptel-backend-p backend-value)
+                          (cl-loop for model in (gptel-backend-models backend-value)
+                                   thereis (or (gptel--model-capable-p 'gbnf model)
+                                               (gptel--model-capable-p 'ebnf model)))
+                          t))))
 
 (defun rg-edit--run-command (regexp path extra-args)
   "Run rg-edit with REGEXP, PATH, and EXTRA-ARGS."
