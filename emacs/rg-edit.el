@@ -272,8 +272,9 @@ With a C-u prefix argument invoke rg-edit-git-conflicts instead."
 
 (defun rg-edit-mode ()
   (let ((rg-buffer (get-buffer "*rg-edit*")))
-    (with-current-buffer rg-buffer
-      (bury-buffer)))
+    (when rg-buffer
+      (with-current-buffer rg-buffer
+        (bury-buffer))))
   (prog-mode)
   (rg-edit--setup-gptel-directives)
   (rg-edit--setup-gptel--rewrite-directive)
