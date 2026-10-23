@@ -87,7 +87,6 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
   (goto-char (point-min))
   (unless (current-local-map)
     (let ((map (make-sparse-keymap)))
-      (set-keymap-parent map (current-local-map))
       (define-key map (kbd "C-c C-k") #'rg-edit--terminate)
       (use-local-map map)))
   (insert "C-c C-k on this buffer will close it and terminate any outstanding rg-edit session\n\n")
