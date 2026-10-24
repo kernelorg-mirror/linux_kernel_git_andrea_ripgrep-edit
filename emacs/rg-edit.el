@@ -142,8 +142,8 @@ These extra arguments are used only if the extra-args parameter is otherwise nil
 	   "-E" "emacsclient"
 	   "--dump-on-error"
 	   "--output-size-limit=100m"
-	   dir-name
-	   (split-string-shell-command (string-trim extra-args)))))
+	   (append (split-string-shell-command (string-trim extra-args))
+		   (list "--" dir-name)))))
 
 (defun rg-edit--get-path (path buffer-file)
   "Get the search path for rg-edit, using PATH or buffer file location."
