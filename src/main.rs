@@ -191,7 +191,12 @@ impl FileRanges {
         if let Some(line_num_str) = parts.next()
             && let Ok(line_num) = line_num_str.parse::<usize>()
         {
-            let code = parts.next().unwrap().to_string();
+            let code = parts
+                .next()
+                .ok_or_else(|| {
+                    anyhow::anyhow!("Missing separator after line number in line: {}", line)
+                })?
+                .to_string();
             Ok((line_num, code))
         } else {
             Err(anyhow::anyhow!(
