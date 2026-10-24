@@ -63,16 +63,18 @@ The Copr is built for Fedora rawhide / 43 / 42.
 - `--output-size-limit <SIZE>`: Limit the total ripgrep output size (e.g., `1024`, `1k`, `1m`, `1g`). If the limit is exceeded, the tool exits with code 3.  
 - `--gbnf`: Generate a dynamic GBNF grammar file  
 - `-G, --gbnf-control-lines <N>`: Maximum number of GBNF control lines added as extra context (default: 10)  
+- `--`: End of options; all following arguments are treated as paths. Use this when a path starts with `-` so it is not interpreted as an option.  
 
 ## Examples
 
 ```bash
-rg-edit [OPTIONS] --regexp <REGEXP> --editor <EDITOR> [PATHS...]
+rg-edit [OPTIONS] --regexp <REGEXP> --editor <EDITOR> [--] [PATHS...]
 rg-edit -e "function\s*\(" -E vim src/
 rg-edit -e "function\s*\(" -E emacsclient -C 8 src/
 rg-edit -E vim -C10 -U -e '(?s)^<<<<<<<+ .*?^\|\|\|\|\|\|\|+ .*?^>>>>>>>+ ' # resolve git conflicts
 rg-edit -E emacsclient -C10 -U -e '(?s)^<<<<<<<+ .*?^\|\|\|\|\|\|\|+ .*?^>>>>>>>+ '
 rg-edit -e '.*' -E vim src/ --output-size-limit 1m # fail if the output exceeds 1 megabyte (exits with code 3)
+rg-edit -e "TODO" -E vim -- -weird-dir/ # use -- when a path starts with -
 ```
 
 ## Why It Was Built
