@@ -500,6 +500,7 @@ fn main() -> Result<()> {
         rg_cmd.arg("--threads");
         rg_cmd.arg(args.threads.to_string());
     }
+    rg_cmd.arg("--");
     for path in &args.paths {
         rg_cmd.arg(path);
     }
