@@ -6,7 +6,7 @@
 
 Name:           ripgrep-edit
 Version:        @@RIPGREP-VERSION@@
-Release:        %autorelease
+Release:        @@RIPGREP-RELEASE@@
 Summary:        Edit ripgrep search results across multiple files
 
 License:        GPL-3.0-or-later OR AGPL-3.0-or-later
