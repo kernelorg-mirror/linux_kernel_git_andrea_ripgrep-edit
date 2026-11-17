@@ -874,25 +874,69 @@ fn print_processed_lines(lines: &[String]) {
 mod tests {
     #[test]
     fn test_rg_edit_search() {
-        use assert_cmd::Command;
+        let bin_name = env!("CARGO_BIN_NAME");
+        let exe_name = format!("{bin_name}{}", std::env::consts::EXE_SUFFIX);
+        let find_bin = || {
+            std::env::current_exe()
+                .ok()?
+                .ancestors()
+                .skip(1)
+                .map(|dir| dir.join(&exe_name))
+                .find(|p| p.is_file())
+                .or_else(|| {
+                    let exe = std::env::current_exe().ok()?;
+                    let profile = exe
+                        .parent()
+                        .and_then(|p| {
+                            if p.file_name().is_some_and(|n| n == "deps") {
+                                p.parent()
+                            } else {
+                                Some(p)
+                            }
+                        })?
+                        .file_name()?;
+                    let target_dir = std::env::var_os("CARGO_TARGET_DIR")
+                        .map(std::path::PathBuf::from)
+                        .unwrap_or_else(|| {
+                            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target")
+                        });
+                    let path = target_dir.join(profile).join(&exe_name);
+                    path.is_file().then_some(path)
+                })
+        };
+        let bin_path = find_bin().unwrap_or_else(|| {
+            let mut cmd = std::process::Command::new(
+                std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()),
+            );
+            cmd.args(["build", "--bin", bin_name]);
+            if !cfg!(debug_assertions) {
+                cmd.arg("--release");
+            }
+            let status = cmd.status().expect("failed to execute cargo build");
+            assert!(status.success(), "cargo build --bin {bin_name} failed");
+            find_bin().unwrap_or_else(|| panic!("binary {exe_name} not found"))
+        });
 
-        let mut cmd = Command::cargo_bin(env!("CARGO_BIN_NAME")).unwrap();
-        cmd.arg("--regexp")
-            .arg("context_separator")
-            .arg("src")
-            .arg("--editor")
-            .arg("cat")
-            .arg("--context")
-            .arg("1")
-            .arg("--filename-prefix")
-            .arg("-- TEST: ");
-
-        let assert = cmd.assert();
-        assert
-            .success()
-            .stdout(predicates::str::contains("src/main.rs"))
-            .stdout(predicates::str::contains("context_separa"))
-            .stderr(predicates::str::contains("File was not modified"));
+        let output = std::process::Command::new(bin_path)
+            .args([
+                "--regexp",
+                "context_separator",
+                "src",
+                "--editor",
+                "cat",
+                "--context",
+                "1",
+                "--filename-prefix",
+                "-- TEST: ",
+            ])
+            .output()
+            .unwrap();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(output.status.success(), "stderr: {stderr}");
+        assert!(stdout.contains("src/main.rs"), "stdout: {stdout}");
+        assert!(stdout.contains("context_separa"), "stdout: {stdout}");
+        assert!(stderr.contains("File was not modified"), "stderr: {stderr}");
     }
 }
 
