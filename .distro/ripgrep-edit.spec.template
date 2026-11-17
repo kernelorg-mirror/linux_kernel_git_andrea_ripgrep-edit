@@ -45,7 +45,7 @@ Use Emacs to edit ripgrep search results across multiple files.
 %install
 %cargo_install
 install -m0644 -D emacs/rg-edit.el %{buildroot}%{_emacs_sitestartdir}/rg-edit-init.el
-install -m0644 -D -t %{buildroot}%{_mandir}/man1/ target/rpm/build/%{name}-*/man/*.1
+find target/rpm/build/%{name}* -name '*.1' -exec install -m0644 -D -t %{buildroot}%{_mandir}/man1/ {} +
 
 %if %{with check}
 %check
