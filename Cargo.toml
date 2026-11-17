@@ -9,22 +9,22 @@ license = "GPL-3.0-or-later OR AGPL-3.0-or-later"
 keywords = ["ripgrep", "rg", "gptel", "gptel-rewrite", "llm"]
 
 [dependencies]
-tempfile = "3.23"
-clap = { version = "4.5", features = ["derive"] }
+tempfile = "3.27"
+clap = { version = "4.6", features = ["derive"] }
 anyhow = "1.0"
 textdistance = "1.1"
-either = "1.15"
+either = "1.19"
 ctrlc = { version = "3.5", features = ["termination"] }
-rayon = "1"
-num_cpus = "1"
+rayon = "1.12"
+num_cpus = "1.17"
 
 [[bin]]
 name = "rg-edit"
 path = "src/main.rs"
 
 [build-dependencies]
-clap_mangen = ">=0.2,<0.4"
-clap = { version = "4.5", features = ["derive"] }
+clap_mangen = "0.3"
+clap = { version = "4.6", features = ["derive"] }
 
 [dev-dependencies]
 assert_cmd = "2.2"
